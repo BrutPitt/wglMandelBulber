@@ -1,6 +1,6 @@
 # WebGL MandelBulber Ray Marching 3D rendering
 
-### RayMarching Perlin Noise 4D 
+### WebGL MandelBulber Ray Marching 3D rendering 
 
 
 ![](https://raw.githubusercontent.com/BrutPitt/wglMandelBulber/master/screenShots/mbulb.jpg)
