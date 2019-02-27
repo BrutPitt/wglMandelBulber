@@ -1,0 +1,581 @@
+﻿<html><head>
+    <title>Quaternon Julia set</title>
+
+ 
+<script id="shader-vs" type="x-shader/x-vertex"> 
+
+  attribute vec2 vPos;
+  void main(void) {
+  gl_Position = vec4(vPos, 0., 1.);
+}
+
+/*
+attribute vec4 vPos;
+void main(void) 
+{
+  gl_Position = vPos;
+} 
+ */
+/*
+
+void main() {
+    gl_Position = gl_Vertex;
+}
+*/
+</script> 
+
+
+<link rel="stylesheet" type="text/css" href="../../jsLib/slider/slider.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="../../jsLib/tools.css" media="screen" />
+
+<script type="text/javascript">
+    var ctxGL = null;
+    var progM = null;
+    var canvasM = null;
+    var leftArcBall = null;
+    var rightArcBall = null;
+    var Zoom = 1.0;
+    var phongMethod = -1.0;
+
+    var timerFullRender = 0;
+
+    var useShadow = true;
+    var useAO = true;
+
+    var isToolsOpened = false;
+    var isLMouseDown = false;
+    var isRMouseDown = false;
+
+    var mTransp = { x: -0.75, y: 0.0 };
+    var mScale = { x: 1.5, y: 1.5 };
+    var mStepScale = 1.0;
+    var mousePos = { x: 2.9645, y: 0.0 };
+
+    var zoomPixel = [
+        0.25,
+        0.5,
+        1.0,
+        2.0,
+        4.0,
+    ];
+
+    var uniformNames = [
+                        "lightR",
+                        "lightG",
+                        "lightB",
+                        "specularComponent",
+                        "specularExponent",
+                        "normalComponent",
+/*
+                        "Qx",
+                        "Qy",
+                        "Qz",
+                        "Qw",
+*/
+                        "epsilon"
+                       ];
+
+
+
+
+</script>
+
+<script type="text/javascript" src="../../jsLib/gl-matrix/common.js"></script>
+<script type="text/javascript" src="../../jsLib/gl-matrix/vec3.js"></script>
+<script type="text/javascript" src="../../jsLib/gl-matrix/vec2.js"></script>
+<script type="text/javascript" src="../../jsLib/gl-matrix/vec4.js"></script>
+<script type="text/javascript" src="../../jsLib/gl-matrix/quat.js"></script>
+<script type="text/javascript" src="../../jsLib/gl-matrix/mat3.js"></script>
+<script type="text/javascript" src="../../jsLib/gl-matrix/mat4.js"></script>
+<script type="text/javascript" src="../../jsLib/arcBall.js"></script>
+
+<script type="text/javascript" src="../../jsLib/slider/slider.js"></script>
+
+<script type="text/javascript">
+
+
+
+function getShader(gl, id) {
+    var shaderScript = document.getElementById(id);
+    var str = "";
+    var k = shaderScript.firstChild;
+    while (k) {
+        if (k.nodeType == 3) str += k.textContent;
+        k = k.nextSibling;
+    }
+    var shader;
+    if (shaderScript.type == "x-shader/x-fragment")
+        shader = gl.createShader(gl.FRAGMENT_SHADER);
+    else if (shaderScript.type == "x-shader/x-vertex")
+        shader = gl.createShader(gl.VERTEX_SHADER);
+    else return null;
+    gl.shaderSource(shader, str);
+    gl.compileShader(shader);
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0)
+        alert(gl.getShaderInfoLog(shader));
+
+
+    return shader;
+}
+
+function getShaderFromFile(gl, url, type)
+{
+    var req = new XMLHttpRequest();
+    req.open("GET", url, false);
+    req.send(null);
+
+    var shader = null;
+    if (req.status == 200 || req.status == 0) {
+
+        shader = gl.createShader(type);
+
+        gl.shaderSource(shader, req.responseText);
+
+        gl.compileShader(shader);
+        if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0)
+            alert(gl.getShaderInfoLog(shader));
+    }
+
+    return shader;
+}
+
+
+
+var controls = [];
+
+
+
+
+function render(isFullRender)
+{
+    if(typeof(isFullRender) === "undefined") isFullRender = false;
+/*
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vA"), 1,0,0);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vB"), 0,1,0);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vC"), 0,0,1);
+*/
+
+    //ctxGL.useProgram(progM);
+
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "resolution"), canvasM.width, canvasM.height, canvasM.width/canvasM.height);
+
+    //ctxGL.uniform1i( ctxGL.getUniformLocation(progM,"iterations"), 100 );
+    //ctxGL.uniform2f(ctxGL.getUniformLocation(progM, "mouse"), mousePos.x, mousePos.y);
+    ctxGL.uniform1i(ctxGL.getUniformLocation(progM, "isFullRender"), isFullRender);
+    //ctxGL.uniform1f(ctxGL.getUniformLocation(progM, "phongMethod"), document.getElementById("epsilonTXT").value);
+    ctxGL.uniform1f(ctxGL.getUniformLocation(progM, "phongMethod"), phongMethod);
+    ctxGL.uniform1i(ctxGL.getUniformLocation(progM, "useShadow"), useShadow);
+    ctxGL.uniform1i(ctxGL.getUniformLocation(progM, "useAO"), useAO);
+
+
+    var world = mat3.create();
+    leftArcBall.rotation(world);
+
+    var vZoom = vec3.fromValues(Zoom, Zoom, Zoom);
+    var mZoom = mat3.create();
+    mat3.scale(mZoom, mZoom, vZoom);
+    mat3.multiply(world, world, mZoom);
+    mat3.invert(world, world);
+
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vA"), world[0], world[1],world[2]);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vB"), world[3], world[4],world[5]);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vC"), world[6], world[7], world[8]);
+
+
+    var vLight = vec3.fromValues(3, 3, 3);
+    var mLightRot = mat3.create();
+    rightArcBall.rotation(mLightRot);
+    mat3.invert(mLightRot, mLightRot);
+
+
+    mat3.mulVec3(vLight, mLightRot, vLight);
+
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Light"), vLight[0], vLight[1], vLight[1]);
+
+    //document.getElementById("coordsTxt").textContent = mLightRot[0] + ", " + mLightRot[1] + ", " + mLightRot[2] +"\n" + mLightRot[3] + ", " + mLightRot[4] + ", " + mLightRot[5] +"\n" +mLightRot[6] + ", " + mLightRot[7] + ", " + mLightRot[8] ;
+
+
+
+
+/*
+    mat3.invert(world, world);
+    ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, mat3.clone(world) );
+*/
+    //var m = new Float32Array(9);
+    //m[0] = m[4] = m[8] = 1.0;
+    //ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, m);
+    //ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+    //ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+
+
+    //gM.uniform2f( gM.getUniformLocation(progM,"mandelPos"), .25, .01 );
+/*
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Eye"), 0, 0, 2.2);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Light"), 3, 3, 3);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "LightColor"), 0.95, 0.7, 0.1);
+    ctxGL.uniform4f(ctxGL.getUniformLocation(progM, "Quat"), 0.25, 0.5, 0.0, 0.25);
+    ctxGL.uniform1f(ctxGL.getUniformLocation(progM, "Epsilon"), .003);
+    //ctxGL.uniform1f(ctxGL.getUniformLocation(progM, "Slice"), 0);
+*/
+
+    /*
+        uniform vec3 Eye = vec3(0, 0, 2.2);
+        uniform mat3 Orientation = mat3(1);
+        uniform vec3 Light = vec3(3, 3, 3);
+        uniform vec3 LightColor = vec3(0.95, 0.7, 0.1);
+        uniform vec4 Quat = vec4(0.25, 0.5, 0.0, 0.25);
+        uniform float Epsilon = 0.003;
+        uniform float Slice;
+    */
+
+
+
+    ctxGL.drawArrays(ctxGL.TRIANGLE_STRIP, 0, 4);
+
+
+    if(isFullRender==false) {
+        if(timerFullRender!=0) clearTimeout(timerFullRender);
+        timerFullRender = setTimeout("render(true)", 1000);
+    }
+
+}
+
+function onResize() 
+{
+
+    var i = document.getElementById("screenDef").selectedIndex;
+
+    canvasM.width = window.innerWidth / zoomPixel[i]; //  / .5
+    canvasM.height = window.innerHeight / zoomPixel[i]; //   / .5
+    canvasM.style.width = window.innerWidth + 'px';
+    canvasM.style.height = window.innerHeight + 'px';
+
+
+    ctxGL.viewport(0, 0, canvasM.width, canvasM.height);
+    leftArcBall.setWindowSize(canvasM.width* zoomPixel[i], canvasM.height* zoomPixel[i]);
+    rightArcBall.setWindowSize(canvasM.width* zoomPixel[i], canvasM.height* zoomPixel[i]);
+
+    if (progM) render();
+
+}
+
+
+
+function getMousePos(canvas, evt) {
+    return {
+        x: evt.clientX, // evt.clientX / window.innerWidth,
+        y: evt.clientY // 1 - evt.clientY / window.innerHeight
+    };
+}
+
+
+function windowTools()
+{
+    if (isToolsOpened) { popupTools.style.display = "none"; isToolsOpened = false; }
+    else               { popupTools.style.display = "block"; isToolsOpened = true; }
+
+}
+
+function showTools() 
+{
+    /* get the mouse left position */
+    //x = event.clientX + document.body.scrollLeft;
+    /* get the mouse top position  */
+    //y = event.clientY + document.body.scrollTop + 35;
+    /* display the pop-up */
+    Popup.style.display = "block";
+    /* set the pop-up's left */
+    Popup.style.left = 10;
+    /* set the pop-up's top */
+    Popup.style.top = 10;
+    isToolsOpened = true;
+}
+/* this function hides the pop-up when
+user moves the mouse out of the link */
+function hideTools() 
+{
+    /* hide the pop-up */
+    Popup.style.display = "none";
+    isToolsOpened = false;
+}
+
+function togglePhong()
+{
+    phongMethod *= -1;
+    render();
+
+}
+
+
+function webGLStart() {
+
+    var controller;
+
+
+//Creo canvas su intera window
+    var effect = document.createElement('div');
+    document.body.appendChild(effect);
+
+    canvasM = document.createElement('canvas');
+    effect.appendChild(canvasM);
+
+    //demoInit();
+    //controls[controls.length] = new Slider(obj[(3*i)+2].getElementsByTagName('div')[1],obj[(3*i)+1],obj[(3*i)+2].getElementsByTagName('div')[0]);
+        
+
+    //controller = new Controller();
+
+    //popupTools.addEventListener("mousedown", onMouseDown, false);
+
+
+    try {
+        ctxGL = canvasM.getContext("webgl") || canvasM.getContext("experimental-webgl");
+    } catch (e) { }
+    if (!ctxGL) { alert("Can't get WebGL"); return; }
+
+
+    progM = ctxGL.createProgram();
+    ctxGL.attachShader(progM, getShader(ctxGL, "shader-vs"));
+    //ctxGL.attachShader(progM, getShader(ctxGL, "JulCosFS"));
+    ctxGL.attachShader(progM, getShaderFromFile(ctxGL, "mbFragES2.glsl", ctxGL.FRAGMENT_SHADER));
+    //ctxGL.attachShader(progM, getShaderFromFile(ctxGL, "Mandel.glsl", ctxGL.FRAGMENT_SHADER));
+    ctxGL.linkProgram(progM);
+    ctxGL.useProgram(progM);
+
+    var posAtrLocM = ctxGL.getAttribLocation(progM, "vPos");
+
+    var verticesM = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+    ctxGL.bindBuffer(ctxGL.ARRAY_BUFFER, ctxGL.createBuffer());
+    ctxGL.bufferData(ctxGL.ARRAY_BUFFER, verticesM, ctxGL.STATIC_DRAW);
+
+    ctxGL.vertexAttribPointer(posAtrLocM, 2, ctxGL.FLOAT, false, 0, 0);
+    ctxGL.enableVertexAttribArray(posAtrLocM);
+
+    //ctxGL.vertexAttribPointer(0, 2, ctxGL.FLOAT, false, 0, 0);
+    //ctxGL.enableVertexAttribArray(0);
+
+    
+    leftArcBall = new ArcBall();
+    rightArcBall = new ArcBall();
+
+
+    var obj = document.getElementById('controls').getElementsByTagName('dd');
+
+    var items = parseInt(obj.length / sliderComponents);
+    for (var i = 0; i < items; i++) {
+        controls[controls.length] = new Slider(obj, i, uniformNames[i]);
+        //controls[i].oV.innerHTML = controls[i].value;
+    }
+
+
+
+    window.addEventListener("resize", onWindowsResize, false);
+    canvasM.addEventListener("mousemove", onMouseMove, false);
+
+    canvasM.addEventListener("mousedown", onMouseDown, false);
+    canvasM.addEventListener("mouseup", onMouseUp, false);
+    canvasM.addEventListener("mouseover", onMouseUp, false);
+    canvasM.addEventListener("mousewheel", onMouseWheel, false);
+    canvasM.addEventListener("DOMMouseScroll", onMouseWheel, false);
+
+    function onWindowsResize(evt) { onResize(); }
+
+    function onMouseDown(evt) {
+        switch(evt.which) {
+            case 1:
+                isLMouseDown = true;
+                leftArcBall.start(evt.clientX, evt.clientY);
+                break;
+            case 2:
+                break;
+            case 3:
+                isRMouseDown = true;
+                rightArcBall.start(evt.clientX, evt.clientY);
+                break;
+            default:
+        }
+    }
+
+    function onMouseUp(evt) {
+        switch (evt.which) {
+            case 1:
+                isLMouseDown = false;
+                leftArcBall.stop();
+                break;
+            case 2:
+                break;
+            case 3:
+                isRMouseDown = false;
+                rightArcBall.stop();
+                break;
+            default:
+        }
+    }
+
+    function onMouseMove(evt) {
+        var i = document.getElementById("screenDef").selectedIndex;
+        if(isLMouseDown) {
+            mousePos = getMousePos(canvasM, evt);
+            leftArcBall.drag(mousePos.x, mousePos.y);
+            render();
+        } else if(isRMouseDown) {
+            mousePos = getMousePos(canvasM, evt);
+            rightArcBall.drag(mousePos.x, mousePos.y);
+            render();
+        }
+    }
+    
+    
+    function onMouseWheel(evt) {
+        var maxZoom = 4.5;
+        var minZoom = .5;
+        var spin = evt.wheelDelta
+        Zoom += .033 *  Math.max(-1, Math.min(1, (evt.wheelDelta || -evt.detail)));
+        Zoom = Zoom > maxZoom ? maxZoom : (Zoom < minZoom ? minZoom : Zoom);
+        render();
+        
+
+    }
+
+    for (i = 0; i < zoomPixel.length; i++) 
+        var opt = screenDef.appendChild(document.createElement("option")).text = zoomPixel[i];
+
+    document.getElementById("screenDef").selectedIndex = 2;
+
+
+    onResize();
+
+    //showTools();
+
+
+}
+</script>
+
+</head>
+
+<body onload="webGLStart();" oncontextmenu="return false;" style="color: #CCCCCC; background-color: #000000">
+
+<div id="popupTools" class="toolsWindow">
+    <div class ="toolsTitle" >
+      <b>T o o l s</b></div>
+
+
+    <div id="controls">
+
+
+          <div class="clear"></div>
+
+           <dl class="col">
+
+               <dt>Color</dt>
+               <dd class="title">Red component</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.25</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>Color</dt>
+               <dd class="title">Green component</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.25</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>Color</dt>
+               <dd class="title">Blue component</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.25</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <p></p>
+
+               <dt>Specular</dt>
+               <dd class="title">component</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.5</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>Specular</dt>
+               <dd class="title">exponent</dd>
+               <dd>0.0</dd><dd>10.0</dd><dd>1.0</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>Normal</dt>
+               <dd class="title">color variation</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.75</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <p></p>
+<!--
+               <dt>Qx</dt>
+               <dd class="title">Qx</dd>
+               <dd>-1.0</dd><dd>1.0</dd><dd>-.65</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider"></div>
+               </dd>
+               <dt>Qy</dt>
+               <dd class="title">Qy</dd>
+               <dd>-1.0</dd><dd>1.0</dd><dd>.4</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider"></div>
+               </dd>
+
+               <dt>Qz</dt>
+               <dd class="title">Qz</dd>
+               <dd>-1.0</dd><dd>1.0</dd><dd>.25</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider"></div>
+               </dd>
+               <dt>Qw</dt>
+               <dd class="title">Qw</dd>
+               <dd>-1.0</dd><dd>1.0</dd><dd>.05</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider"></div>
+               </dd>
+               <p></p>
+-->               
+               <dt>Epsilon</dt>
+               <dd class="title">epsilon</dd>
+               <dd>.0000001</dd><dd>.001</dd><dd>0.0001</dd><dd>7</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider"></div>
+               </dd>   
+
+          </dl>
+        
+    </div>
+
+    <div id="cmbScreen">
+        <select id="screenDef"  onchange="onResize()"></select> pixel size 
+    </div>
+
+    <div id="editTxt">
+        <button onclick="togglePhong()">invert Phong</button>
+    </div>
+
+
+</div>
+
+<div id="tools">
+    <div id="tools" title="open tools menu" onclick="windowTools()">&#10043; </div>
+
+</div>
+
+<div id="toolsGen">
+    <div id="toolsGen" title="open tools menu" onclick="windowTools()">&#10044;</div>
+</div>
+
+
+</body>
+</html>

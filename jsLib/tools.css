@@ -1,0 +1,193 @@
+﻿			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+                font-family: Arial,Helvetica,Sans-serif;
+                font-size: 12px;
+
+			}
+
+			button, a, a:visited {
+
+				padding: 8px 12px 8px 12px;
+
+				border: none;
+				border-radius: 5px;
+				margin-right: 5px;
+
+				color: #ffffff;
+				background-color: #000000;
+				opacity: 0.5;
+
+				font-family: Monospace;
+				font-size: 12px;
+				font-weight: bold;
+
+				cursor: pointer;
+				text-decoration: none;
+
+			}
+
+		    select
+		    {
+				padding: 6px 8px 6px 8px;
+
+				border: none;
+				border-radius: 3px;
+				margin-right: 3px;
+
+				color: #ffffff;
+				background-color: #000000;
+				opacity: 0.5;
+
+				font-family: Monospace;
+				font-size: 12px;
+
+				cursor: pointer;
+				text-decoration: none;
+
+		    }
+
+
+			button:hover, select:hover, a:hover {
+
+				opacity: 1;
+				box-shadow: 0 0 4px #FFF;
+
+			}
+
+			option {
+
+				color: #ffffff;
+				background-color: #000000;
+
+			}
+			
+			.toolsWindow {
+			    /*opacity: 0.5;
+                filter:alpha(opacity=50);*/
+                position: fixed;
+                top: 44px;
+                left: 14px;
+                background-color: rgba(0, 0, 0, 0.2);
+                display:none;
+                width:220;
+                height:500;
+                position:absolute;
+                color: rgba(255,255,255,1);
+                border: 1 white solid;
+                border-radius: 5px;
+            }
+			.toolsTitle {
+			    /*opacity: 0.5;
+                filter:alpha(opacity=50);*/
+                font-size: 12px;
+                background-color: rgba(0, 0, 0, .1);
+                color: rgba(255,255,255,1);
+                border: none;
+                border-radius: 5px 5px 0px 0px;
+                text-align: center;
+            }
+            
+        #tools {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            font-size: 24px;
+            line-height: 24px;
+            font-weight: bold;
+            text-align: center;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        #tools div {
+            float: left;
+            width: 24px;
+            /*background: rgba(0,0,0,0.6);*/
+            border-radius: 4px;
+            margin-right: 4px;
+            padding: 2px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.2);
+        }
+        #tools div:hover {
+            cursor: pointer;
+            /*background: rgba(0,0,0,1);*/
+            color: rgba(255,255,255,1);
+        }
+        #tools #tools:hover {
+           color: rgba(255,255,255,1);
+        }
+        #toolsGen {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            font-size: 24px;
+            line-height: 24px;
+            font-weight: bold;
+            text-align: center;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        #toolsGen div {
+            float: right;
+            width: 24px;
+            /*background: rgba(0,0,0,0.6);*/
+            border-radius: 4px;
+            margin-right: 4px;
+            padding: 2px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.2);
+        }
+        #toolsGen div:hover {
+            cursor: pointer;
+            /*background: rgba(0,0,0,1);*/
+            color: rgba(255,255,255,1);
+        }
+        #toolsGen #tools:hover {
+           color: rgba(255,255,255,1);
+        }
+
+		#cmbScreen {
+            position: inherit;
+            bottom: 48px;
+            left: 8px;
+            text-align: left;
+            float: left;
+            width: 200px;
+            /*background: rgba(0,0,0,0.6);*/
+            border-radius: 4px;
+            margin-right: 4px;
+            padding: 2px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.8);
+            background: rgba(0,0,0,0.2);
+            text-shadow: 1px 1px #000000;
+		}
+            
+		#editTxt {
+            position: inherit;
+            bottom: 8px;
+            left: 8px;
+            text-align: left;
+            float: left;
+            width: 200px;
+            /*background: rgba(0,0,0,0.6);*/
+            border-radius: 4px;
+            margin-right: 4px;
+            padding: 2px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.8);
+            background: rgba(0,0,0,0.2);
+            text-shadow: 1px 1px #000000;
+		}
