@@ -12,7 +12,7 @@
 
 **Description**
 
-This is my 2012 **pure** WebGL 1.0 Experiment, without 3th parts WebGL library.
+This is my 2012 **pure** WebGL 1.0 Experiment, without 3th party WebGL tools/library.
 
-It uses only gl-matrix js library for transformations, and other self-made tools
+It uses only [gl-matrix](https://github.com/toji/gl-matrix) js library for 3D transformations, and other self-made tools in the [jsLib](https://github.com/BrutPitt/wglMandelBulber/tree/master/jsLib) directory
 
