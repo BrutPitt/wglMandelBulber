@@ -195,41 +195,6 @@ function render(isFullRender)
     //document.getElementById("coordsTxt").textContent = mLightRot[0] + ", " + mLightRot[1] + ", " + mLightRot[2] +"\n" + mLightRot[3] + ", " + mLightRot[4] + ", " + mLightRot[5] +"\n" +mLightRot[6] + ", " + mLightRot[7] + ", " + mLightRot[8] ;
 
 
-
-
-/*
-    mat3.invert(world, world);
-    ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, mat3.clone(world) );
-*/
-    //var m = new Float32Array(9);
-    //m[0] = m[4] = m[8] = 1.0;
-    //ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, m);
-    //ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-    //ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, [1, 0, 0, 0, 1, 0, 0, 0, 1]);
-
-
-    //gM.uniform2f( gM.getUniformLocation(progM,"mandelPos"), .25, .01 );
-/*
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Eye"), 0, 0, 2.2);
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Light"), 3, 3, 3);
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "LightColor"), 0.95, 0.7, 0.1);
-    ctxGL.uniform4f(ctxGL.getUniformLocation(progM, "Quat"), 0.25, 0.5, 0.0, 0.25);
-    ctxGL.uniform1f(ctxGL.getUniformLocation(progM, "Epsilon"), .003);
-    //ctxGL.uniform1f(ctxGL.getUniformLocation(progM, "Slice"), 0);
-*/
-
-    /*
-        uniform vec3 Eye = vec3(0, 0, 2.2);
-        uniform mat3 Orientation = mat3(1);
-        uniform vec3 Light = vec3(3, 3, 3);
-        uniform vec3 LightColor = vec3(0.95, 0.7, 0.1);
-        uniform vec4 Quat = vec4(0.25, 0.5, 0.0, 0.25);
-        uniform float Epsilon = 0.003;
-        uniform float Slice;
-    */
-
-
-
     ctxGL.drawArrays(ctxGL.TRIANGLE_STRIP, 0, 4);
 
 
@@ -278,10 +243,6 @@ function windowTools()
 
 function showTools() 
 {
-    /* get the mouse left position */
-    //x = event.clientX + document.body.scrollLeft;
-    /* get the mouse top position  */
-    //y = event.clientY + document.body.scrollTop + 35;
     /* display the pop-up */
     Popup.style.display = "block";
     /* set the pop-up's left */
@@ -319,14 +280,6 @@ function webGLStart() {
     canvasM = document.createElement('canvas');
     effect.appendChild(canvasM);
 
-    //demoInit();
-    //controls[controls.length] = new Slider(obj[(3*i)+2].getElementsByTagName('div')[1],obj[(3*i)+1],obj[(3*i)+2].getElementsByTagName('div')[0]);
-        
-
-    //controller = new Controller();
-
-    //popupTools.addEventListener("mousedown", onMouseDown, false);
-
 
     try {
         ctxGL = canvasM.getContext("webgl") || canvasM.getContext("experimental-webgl");
@@ -351,10 +304,6 @@ function webGLStart() {
     ctxGL.vertexAttribPointer(posAtrLocM, 2, ctxGL.FLOAT, false, 0, 0);
     ctxGL.enableVertexAttribArray(posAtrLocM);
 
-    //ctxGL.vertexAttribPointer(0, 2, ctxGL.FLOAT, false, 0, 0);
-    //ctxGL.enableVertexAttribArray(0);
-
-    
     leftArcBall = new ArcBall();
     rightArcBall = new ArcBall();
 
