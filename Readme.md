@@ -1,7 +1,11 @@
 # WebGL MandelBulber Ray Marching 3D rendering
 
-### WebGL MandelBulber Ray Marching 3D rendering 
-
+WebGL MandelBulber Ray Marching 3D rendering with the following features:
+- light (blinn-phong) and shadows
+- ambient occlusion
+- subpixel subdivision
+- level of details (epsilon)
+- auto-progressive step of accuracy.
 
 ![](https://raw.githubusercontent.com/BrutPitt/wglMandelBulber/master/screenShots/mbulb.jpg)
 

@@ -8,28 +8,28 @@ uniform float qjR, qjG, qjB;
 uniform bool isFullRender;
 uniform bool useShadow;
 uniform bool useAO;
+uniform float diffIntensity;
+uniform float ambientLight;
+uniform float shadowDarkness;
 
-uniform vec3 vA, vB, vC;
+uniform mat3 Orientation;
 uniform float phongMethod;
 uniform float specularExponent;
 uniform float specularComponent;
 uniform float normalComponent;
+uniform float maxDetailIter;
 
 const vec3 Eye = vec3(0, 0, 2.2);
-mat3 Orientation = mat3(vA, vB, vC);
 uniform vec3 Light;
 uniform float epsilon;
 const float Slice=.0;
-const int maxIterations = 7;
+uniform float maxIterations;// = 7;
 
-const float Power = 12.0;
+uniform float Power;// = 12.0;
 const float BAILOUT=2.0;
 
-
-
-const float BOUNDING_RADIUS_2 = 4.0;
-const float ESCAPE_THRESHOLD = 1e1;
-float DEL = epsilon;
+float EPS = epsilon;
+float DEL = epsilon*.01;
 
 
 vec3 Phong(vec3 light, vec3 eye, vec3 pt, vec3 N) {
@@ -38,8 +38,8 @@ vec3 Phong(vec3 light, vec3 eye, vec3 pt, vec3 N) {
     vec3 E = normalize(eye - pt);
     float NdotL = dot(N, L);
     vec3 R = L - 2. * NdotL * N;
-    diffuse += abs(N) * normalComponent;
-    return vec3(0.1) + diffuse * max(NdotL, 0.0) + specularComponent * pow(max(dot(E, R), 0.0), specularExponent);
+    diffuse += abs(N) * normalComponent * diffIntensity;
+    return ambientLight + diffuse * max(NdotL, 0.0) + specularComponent * pow(max(dot(E, R), 0.0), specularExponent);
 }
 
 vec4 mainBulb(vec4 v)
@@ -88,17 +88,18 @@ vec3 NormEstimate(vec3 p, float slice) {
     vec4 gy = vec4(p + vec3(0, DEL, 0), 1.0);
     vec4 gz = vec4(p + vec3(0, 0, DEL), 1.0);
 
-    vec4 v0 = vec4(g0.xyz, 1.0);
-    vec4 vx = vec4(gx.xyz, 1.0);
-    vec4 vy = vec4(gy.xyz, 1.0);
-    vec4 vz = vec4(gz.xyz, 1.0);
+    vec4 v0 = vec4(g0.xyz, .0);
+    vec4 vx = vec4(gx.xyz, .0);
+    vec4 vy = vec4(gy.xyz, .0);
+    vec4 vz = vec4(gz.xyz, .0);
     
     vec4 c = vec4(p, 0.0);
-    for (int i = 0; i < maxIterations-2; i++) {
+    for (int i = 0; i < 100-2; i++) {
         g0 = mainBulb(g0) + v0;
         gx = mainBulb(gx) + vx;
         gy = mainBulb(gy) + vy;
         gz = mainBulb(gz) + vz;
+        if(i>int(maxIterations)-2) break; // WebGL1 need of const Loop comp: real test is here
     }
     float ln = length(g0);
     gradX = length(gx) - ln;
@@ -115,22 +116,24 @@ float intersectMBulb(inout vec3 rO, inout vec3 rD, out vec4 trap)
 {
 
     float dist;
-    for(int i = 0; i<250; i++) {
+    for(int i = 0; i<1000; i++) {
         float r=0.0;        
         vec4 v = vec4(rO, 1.0);
         trap = vec4(abs(v.xyz),dot(v.xyz,v.xyz));
-        for(int n=0; n<maxIterations; ++n)
+        for(int n=0; n<100; ++n)
         {
             r = length(v.xyz);
             if(r>BAILOUT) break;
 
             v = mainBulb(v) + vec4(rO, 0.0);
             trap = min( trap, vec4(abs(v.xyz),dot(v.xyz,v.xyz)) );
+            if(n>int(maxIterations)) break; // WebGL1 need of const Loop comp: real test is here
         }
 
         dist = 0.5*log(r)*r/v.w;
         rO += rD * dist;
-        if (dist < epsilon ) break;
+        if(dist < EPS ) break;
+        if(i>=int(maxDetailIter)) break;
     }
     return dist;
 }
@@ -155,7 +158,7 @@ void main() {
 	 sampleCoord[8] = vec3(-NR,   0, .5);
 
 	//float colorDiv = 1., shadowDiv = 1.0, colorShadow = 1.;
-    float colorDiv = 4., shadowDiv = 9.0, colorShadow = 0.;
+    float colorDiv = .25, shadowDiv = 9.0, colorShadow = 0.;
     vec3 color = vec3(0.);
     for (int i = 0; i < 9; i++) {
 		//vec2 coord = isFullRender ? gl_FragCoord.xy*2. + sampleCoord[i] : gl_FragCoord.xy*2.;
@@ -170,7 +173,7 @@ void main() {
         float dist = intersectMBulb(origin, dir, col);
 
         //float dist = IntersectQJulia(origin, dir, Quat, Slice);
-        if (dist < epsilon) {
+        if (dist < EPS) {
             vec3 N = NormEstimate(origin, Slice);
             float aoComponent = useAO ? (.45+.55*clamp( 1.7*col.w-.7 , .0, 1.0 )) : 1.0;
             color += Phong(orient * (Light*phongMethod), orient * Eye, origin, N*phongMethod) * aoComponent * sampleCoord[i].z;
@@ -179,14 +182,14 @@ void main() {
 
             if(useShadow) {
                 vec3 L = normalize( orient*Light - origin );
-                origin += N*epsilon*2.;
+                origin += N*EPS*2.;
                 dist = intersectMBulb(origin, L, col);
 
                  // Again, if our estimate of the distance to the set is small, we say
                  // that there was a hit.  In this case it means that the point is in
                  // shadow and should be given darker shading.
-                 if( dist < epsilon ) colorShadow += 0.5;  // (darkening the shaded value is not really correct, but looks good)
-                 else                 colorShadow += 1.0;
+                 if( dist < EPS ) colorShadow += shadowDarkness;  // (darkening the shaded value is not really correct, but looks good)
+                 else             colorShadow += 1.0;
             }
 
         }
@@ -195,7 +198,7 @@ void main() {
 
     }
 	//color = Orientation[1];
-    gl_FragColor = vec4(color/colorDiv, 1.);
+    gl_FragColor = vec4(color*colorDiv, 1.);
     
     if(useShadow) gl_FragColor.xyz *= colorShadow/shadowDiv;
 

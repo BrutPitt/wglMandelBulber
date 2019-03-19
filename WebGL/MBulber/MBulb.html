@@ -1,27 +1,13 @@
 ﻿<html><head>
-    <title>Quaternon Julia set</title>
+    <title>MandelBulb set</title>
 
  
 <script id="shader-vs" type="x-shader/x-vertex"> 
-
   attribute vec2 vPos;
   void main(void) {
   gl_Position = vec4(vPos, 0., 1.);
 }
 
-/*
-attribute vec4 vPos;
-void main(void) 
-{
-  gl_Position = vPos;
-} 
- */
-/*
-
-void main() {
-    gl_Position = gl_Vertex;
-}
-*/
 </script> 
 
 
@@ -63,15 +49,15 @@ void main() {
                         "lightR",
                         "lightG",
                         "lightB",
+                        "diffIntensity",                        
                         "specularComponent",
                         "specularExponent",
+                        "ambientLight",
+                        "shadowDarkness",
                         "normalComponent",
-/*
-                        "Qx",
-                        "Qy",
-                        "Qz",
-                        "Qw",
-*/
+                        "Power",                        
+                        "maxIterations",
+                        "maxDetailIter",
                         "epsilon"
                        ];
 
@@ -149,13 +135,6 @@ var controls = [];
 function render(isFullRender)
 {
     if(typeof(isFullRender) === "undefined") isFullRender = false;
-/*
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vA"), 1,0,0);
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vB"), 0,1,0);
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vC"), 0,0,1);
-*/
-
-    //ctxGL.useProgram(progM);
 
     ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "resolution"), canvasM.width, canvasM.height, canvasM.width/canvasM.height);
 
@@ -177,20 +156,17 @@ function render(isFullRender)
     mat3.multiply(world, world, mZoom);
     mat3.invert(world, world);
 
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vA"), world[0], world[1],world[2]);
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vB"), world[3], world[4],world[5]);
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "vC"), world[6], world[7], world[8]);
-
+    ctxGL.uniformMatrix3fv(ctxGL.getUniformLocation(progM, "Orientation"), false, world);
 
     var vLight = vec3.fromValues(3, 3, 3);
     var mLightRot = mat3.create();
     rightArcBall.rotation(mLightRot);
-    mat3.invert(mLightRot, mLightRot);
+    //mat3.invert(mLightRot, mLightRot);
 
 
     mat3.mulVec3(vLight, mLightRot, vLight);
 
-    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Light"), vLight[0], vLight[1], vLight[1]);
+    ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Light"), vLight[0], vLight[1], vLight[2]);
 
     //document.getElementById("coordsTxt").textContent = mLightRot[0] + ", " + mLightRot[1] + ", " + mLightRot[2] +"\n" + mLightRot[3] + ", " + mLightRot[4] + ", " + mLightRot[5] +"\n" +mLightRot[6] + ", " + mLightRot[7] + ", " + mLightRot[8] ;
 
@@ -262,11 +238,22 @@ function hideTools()
 
 function togglePhong()
 {
-    phongMethod *= -1;
+    phongMethod = document.getElementById('phongCheck').checked ? 1 : -1;
     render();
 
 }
 
+function toggleAO()
+{
+    useAO = document.getElementById('aoCheck').checked;
+    render();
+}
+
+function toggleShadow()
+{
+    useShadow = document.getElementById('shadowCheck').checked;
+    render();
+}
 
 function webGLStart() {
 
@@ -316,6 +303,9 @@ function webGLStart() {
         //controls[i].oV.innerHTML = controls[i].value;
     }
 
+    document.getElementById('aoCheck').checked = useAO;
+    document.getElementById('shadowCheck').checked = useShadow;
+    document.getElementById('phongCheck').checked = phongMethod == -1 ? false : true;
 
 
     window.addEventListener("resize", onWindowsResize, false);
@@ -437,82 +427,97 @@ function webGLStart() {
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
+               <dt>Intensity</dt>
+               <dd class="title">Diffuse Int.</dd>
+               <dd>0.0</dd><dd>4.0</dd><dd>1.0</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
                <p></p>
 
                <dt>Specular</dt>
                <dd class="title">component</dd>
-               <dd>0.0</dd><dd>1.0</dd><dd>.5</dd><dd>2</dd>
+               <dd>0.0</dd><dd>2.0</dd><dd>.75</dd><dd>2</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
                <dt>Specular</dt>
                <dd class="title">exponent</dd>
-               <dd>0.0</dd><dd>10.0</dd><dd>1.0</dd><dd>2</dd>
+               <dd>0.1</dd><dd>25.0</dd><dd>1.0</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>Ambient</dt>
+               <dd class="title">Ambielnt int.</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.1</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>Shadows</dt>
+               <dd class="title">Darkness</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.5</dd><dd>2</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
                <dt>Normal</dt>
                <dd class="title">color variation</dd>
-               <dd>0.0</dd><dd>1.0</dd><dd>.75</dd><dd>2</dd>
+               <dd>0.0</dd><dd>2.0</dd><dd>.75</dd><dd>2</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
                <p></p>
-<!--
-               <dt>Qx</dt>
-               <dd class="title">Qx</dd>
-               <dd>-1.0</dd><dd>1.0</dd><dd>-.65</dd><dd>2</dd>
+               <dt>Power</dt>
+               <dd class="title">MBulb power</dd>
+               <dd>1.0</dd><dd>25.0</dd><dd>12</dd><dd>1</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
-                <div class="slider"></div>
+                <div class="slider" title=""></div>
                </dd>
-               <dt>Qy</dt>
-               <dd class="title">Qy</dd>
-               <dd>-1.0</dd><dd>1.0</dd><dd>.4</dd><dd>2</dd>
+               <dt>maxIterations</dt>
+               <dd class="title">max Iterations</dd>
+               <dd>0.3</dd><dd>13.0</dd><dd>7</dd><dd>0</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
-                <div class="slider"></div>
+                <div class="slider" title=""></div>
                </dd>
-
-               <dt>Qz</dt>
-               <dd class="title">Qz</dd>
-               <dd>-1.0</dd><dd>1.0</dd><dd>.25</dd><dd>2</dd>
+               <dt>maxDetailIter</dt>
+               <dd class="title">max Detail</dd>
+               <dd>100.0</dd><dd>1000.0</dd><dd>250.0</dd><dd>0</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
-                <div class="slider"></div>
+                <div class="slider" title=""></div>
                </dd>
-               <dt>Qw</dt>
-               <dd class="title">Qw</dd>
-               <dd>-1.0</dd><dd>1.0</dd><dd>.05</dd><dd>2</dd>
+               <p></p>
+               <dt>Epsilon</dt>
+               <dd class="title">epsilon</dd>
+               <dd>.00001</dd><dd>.001</dd><dd>0.0001</dd><dd>7</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider"></div>
                </dd>
                <p></p>
--->               
-               <dt>Epsilon</dt>
-               <dd class="title">epsilon</dd>
-               <dd>.0000001</dd><dd>.001</dd><dd>0.0001</dd><dd>7</dd>
-               <dd class="control">
-                <div class="bar" title="Click to move here"></div>
-                <div class="slider"></div>
-               </dd>   
-
-          </dl>
+               <dt>
+               <input type="checkbox" id="aoCheck" onchange="toggleAO()"></input> Ambient Occlusion
+               </dt>
+               <dt>
+               <input type="checkbox" id="shadowCheck" onchange="toggleShadow()"></input> Shadows
+               </dt>
+               <dt>
+                <input type="checkbox" id="phongCheck" onchange="togglePhong()"></input> Invert Light Normal
+                </dt>
+            </dl>
         
     </div>
 
     <div id="cmbScreen">
-        <select id="screenDef"  onchange="onResize()"></select> pixel size 
+        <select id="screenDef"  onchange="onResize()"></select> pixel subdivision 
     </div>
-
-    <div id="editTxt">
-        <button onclick="togglePhong()">invert Phong</button>
-    </div>
-
 
 </div>
 
