@@ -53,8 +53,9 @@
                         "specularComponent",
                         "specularExponent",
                         "ambientLight",
-                        "shadowDarkness",
                         "normalComponent",
+                        "shadowDarkness",
+                        "aoMult", "aoSub", "aoMix",
                         "Power",                        
                         "maxIterations",
                         "maxDetailIter",
@@ -352,7 +353,6 @@ function webGLStart() {
     }
 
     function onMouseMove(evt) {
-        var i = document.getElementById("screenDef").selectedIndex;
         if(isLMouseDown) {
             mousePos = getMousePos(canvasM, evt);
             leftArcBall.drag(mousePos.x, mousePos.y);
@@ -376,9 +376,9 @@ function webGLStart() {
 
     }
 
-    for (i = 0; i < zoomPixel.length; i++) 
-        var opt = screenDef.appendChild(document.createElement("option")).text = zoomPixel[i];
-
+    for (i = 0; i < zoomPixel.length; i++) {
+        screenDef.appendChild(document.createElement("option")).text = zoomPixel[i];
+    }
     document.getElementById("screenDef").selectedIndex = 2;
 
 
@@ -394,7 +394,7 @@ function webGLStart() {
 
 <body onload="webGLStart();" oncontextmenu="return false;" style="color: #CCCCCC; background-color: #000000">
 
-<div id="popupTools" class="toolsWindow">
+<div id="popupTools" class="toolsWindow" style="height:700px">
     <div class ="toolsTitle" >
       <b>T o o l s</b></div>
 
@@ -434,8 +434,6 @@ function webGLStart() {
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
-               <p></p>
-
                <dt>Specular</dt>
                <dd class="title">component</dd>
                <dd>0.0</dd><dd>2.0</dd><dd>.75</dd><dd>2</dd>
@@ -457,6 +455,14 @@ function webGLStart() {
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
+               <dt>Normal</dt>
+               <dd class="title">color variation</dd>
+               <dd>0.0</dd><dd>2.0</dd><dd>.75</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <p></p>
                <dt>Shadows</dt>
                <dd class="title">Darkness</dd>
                <dd>0.0</dd><dd>1.0</dd><dd>.5</dd><dd>2</dd>
@@ -464,9 +470,23 @@ function webGLStart() {
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
-               <dt>Normal</dt>
-               <dd class="title">color variation</dd>
-               <dd>0.0</dd><dd>2.0</dd><dd>.75</dd><dd>2</dd>
+               <dt>aoMult</dt>
+               <dd class="title">aoMult</dd>
+               <dd>0.0</dd><dd>5.0</dd><dd>1.7</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>aoSub</dt>
+               <dd class="title">aoSub</dd>
+               <dd>0.0</dd><dd>2.0</dd><dd>.7</dd><dd>2</dd>
+               <dd class="control">
+                <div class="bar" title="Click to move here"></div>
+                <div class="slider" title=""></div>
+               </dd>
+               <dt>aoMix</dt>
+               <dd class="title">aoMix</dd>
+               <dd>0.0</dd><dd>1.0</dd><dd>.55</dd><dd>2</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
@@ -481,14 +501,14 @@ function webGLStart() {
                </dd>
                <dt>maxIterations</dt>
                <dd class="title">max Iterations</dd>
-               <dd>0.3</dd><dd>13.0</dd><dd>7</dd><dd>0</dd>
+               <dd>1.0</dd><dd>50.0</dd><dd>7</dd><dd>0</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
                </dd>
                <dt>maxDetailIter</dt>
                <dd class="title">max Detail</dd>
-               <dd>100.0</dd><dd>1000.0</dd><dd>250.0</dd><dd>0</dd>
+               <dd>100.0</dd><dd>2000.0</dd><dd>250.0</dd><dd>0</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider" title=""></div>
@@ -496,7 +516,7 @@ function webGLStart() {
                <p></p>
                <dt>Epsilon</dt>
                <dd class="title">epsilon</dd>
-               <dd>.00001</dd><dd>.001</dd><dd>0.0001</dd><dd>7</dd>
+               <dd>.00001</dd><dd>.001</dd><dd>0.0001</dd><dd>6</dd>
                <dd class="control">
                 <div class="bar" title="Click to move here"></div>
                 <div class="slider"></div>
