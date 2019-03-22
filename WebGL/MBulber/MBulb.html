@@ -166,11 +166,9 @@ function render(isFullRender)
 
 
     mat3.mulVec3(vLight, mLightRot, vLight);
+    //vec3.scale(vLight, vLight, 3.0);
 
     ctxGL.uniform3f(ctxGL.getUniformLocation(progM, "Light"), vLight[0], vLight[1], vLight[2]);
-
-    //document.getElementById("coordsTxt").textContent = mLightRot[0] + ", " + mLightRot[1] + ", " + mLightRot[2] +"\n" + mLightRot[3] + ", " + mLightRot[4] + ", " + mLightRot[5] +"\n" +mLightRot[6] + ", " + mLightRot[7] + ", " + mLightRot[8] ;
-
 
     ctxGL.drawArrays(ctxGL.TRIANGLE_STRIP, 0, 4);
 
