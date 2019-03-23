@@ -44,6 +44,18 @@ vec3 Phong(vec3 light, vec3 eye, vec3 pt, vec3 N) {
     vec3 amb = vec3(ambientLight)*.66 + ambientLight*diffuse*.33;
     return max(vec3(0), amb + diffuse *  max(NdotL, 0.0) * diffIntensity + specularComponent * pow(max(dot(E, R), 0.0), specularExponent));
 }
+vec3 blinnPhong(vec3 light, vec3 eye, vec3 pt, vec3 N) {
+    vec3 diffuse = vec3(lightR, lightG, lightB);
+    vec3 L = normalize(light - pt);
+    vec3 E = normalize(eye - pt);
+    vec3 halfLV = normalize(L + E);
+    float NdotL = dot(N, L);
+    float spe = max( dot(N, halfLV), 0.0 );
+    diffuse += abs(N) * normalComponent;
+    vec3 amb = vec3(ambientLight)*.66 + ambientLight*diffuse*.33;
+    return max(vec3(0), amb + diffuse *  max(NdotL, 0.0) * diffIntensity + specularComponent * pow(spe, specularExponent));
+}
+
 
 vec4 mainBulb(vec4 v)
 {
@@ -71,19 +83,21 @@ vec3 NormEstimate(vec3 p, float slice) {
     vec4 vy = vec4(gy.xyz, .0);
     vec4 vz = vec4(gz.xyz, .0);
     
-    vec4 c = vec4(p, 0.0);
+    float ln;
     for (int i = 0; i < 100; i++) {
         g0 = mainBulb(g0) + v0;
         gx = mainBulb(gx) + vx;
         gy = mainBulb(gy) + vy;
         gz = mainBulb(gz) + vz;
-        if(i>int(maxIterations)-2) break; // WebGL1 need of const Loop comp: real test is here
+        ln = length(g0.xyz);
+        if(ln>BAILOUT) break;        
+        if(i>int(maxIterations)) break; // WebGL1 need of const Loop comp: real test is here
     }
     
-    float ln = length(g0);
-    float gradX = length(gx) - ln;
-    float gradY = length(gy) - ln;
-    float gradZ = length(gz) - ln;
+    //float ln    = length(g0.xyz);
+    float gradX = length(gx.xyz) - ln;
+    float gradY = length(gy.xyz) - ln;
+    float gradZ = length(gz.xyz) - ln;
     //N = normalize(vec3(length(gx-g0), length(gy-g0), length(gz-g0)));
     return normalize(vec3(gradX, gradY, gradZ));
 }
