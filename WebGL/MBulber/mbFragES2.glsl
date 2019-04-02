@@ -78,10 +78,10 @@ vec3 NormEstimate(vec3 p, float slice) {
     vec4 gy = vec4(p + vec3(0, DEL, 0), .0);
     vec4 gz = vec4(p + vec3(0, 0, DEL), .0);
 
-    vec4 v0 = vec4(g0.xyz, .0);
-    vec4 vx = vec4(gx.xyz, .0);
-    vec4 vy = vec4(gy.xyz, .0);
-    vec4 vz = vec4(gz.xyz, .0);
+    vec4 v0 = g0;
+    vec4 vx = gx;
+    vec4 vy = gy;
+    vec4 vz = gz;
     
     float ln;
     for (int i = 0; i < 100; i++) {
