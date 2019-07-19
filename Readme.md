@@ -1,6 +1,6 @@
-# WebGL MandelBulber Ray Marching 3D rendering
+# WebGL MandelBulb Ray Marching 3D rendering
 
-WebGL MandelBulber Ray Marching 3D rendering with the following features:
+WebGL MandelBulb Ray Marching 3D rendering with the following features:
 - light model (blinn-phong)
 - shadows
 - ambient occlusion
@@ -15,6 +15,9 @@ WebGL MandelBulber Ray Marching 3D rendering with the following features:
 - RightMouseButton - Rotate light
 - MouseWheel - Zoom in/out
 
+### Live WebGL
+[https://www.michelemorrone.eu/WebGL/MBulb/WebGL/MBulber/MBulb.html](https://www.michelemorrone.eu/WebGL/MBulb/WebGL/MBulber/MBulb.html)
+
 ### Description
 
 This is my 2012 **pure** WebGL 1.0 Experiment, without 3th party WebGL tools/library.
@@ -22,7 +25,7 @@ This is my 2012 **pure** WebGL 1.0 Experiment, without 3th party WebGL tools/lib
 It uses only [gl-matrix](https://github.com/toji/gl-matrix) js library for 3D transformations, and other self-made tools in the [jsLib](https://github.com/BrutPitt/wglMandelBulber/tree/master/jsLib) directory
 
 ### Warnings
-For standalone use, on local computer, need of an http server to load external **glsl** shader.
+For standalone use, on local computer, need of an http server to load external **glsl** shader file.
 
 **Commons workarounds**
 
